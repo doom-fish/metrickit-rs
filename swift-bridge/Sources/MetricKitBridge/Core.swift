@@ -1,5 +1,4 @@
 import Foundation
-import MetricKit
 
 public let MX_OK: Int32 = 0
 public let MX_INVALID_ARGUMENT: Int32 = -1
@@ -67,41 +66,4 @@ func mxJSONString(_ value: Any) -> String {
 
 func mxJSONObject(from data: Data) -> Any {
     (try? JSONSerialization.jsonObject(with: data, options: [])) ?? NSNull()
-}
-
-func mxMeasurement<UnitType: Unit>(_ measurement: Measurement<UnitType>) -> [String: Any] {
-    [
-        "value": measurement.value,
-        "unitSymbol": measurement.unit.symbol,
-        "unitType": String(describing: type(of: measurement.unit)),
-    ]
-}
-
-func mxAverage<UnitType: Unit>(_ average: MXAverage<UnitType>) -> [String: Any] {
-    [
-        "averageMeasurement": mxMeasurement(average.averageMeasurement),
-        "sampleCount": average.sampleCount,
-        "standardDeviation": average.standardDeviation,
-    ]
-}
-
-func mxHistogram<UnitType: Unit>(_ histogram: MXHistogram<UnitType>) -> [String: Any] {
-    var buckets: [[String: Any]] = []
-    let enumerator = histogram.bucketEnumerator
-    while let bucket = enumerator.nextObject() as? MXHistogramBucket<UnitType> {
-        buckets.append([
-            "bucketStart": mxMeasurement(bucket.bucketStart),
-            "bucketEnd": mxMeasurement(bucket.bucketEnd),
-            "bucketCount": bucket.bucketCount,
-        ])
-    }
-
-    return [
-        "totalBucketCount": histogram.totalBucketCount,
-        "buckets": buckets,
-    ]
-}
-
-func mxCallStackTree(_ tree: MXCallStackTree) -> Any {
-    mxJSONObject(from: tree.jsonRepresentation())
 }
