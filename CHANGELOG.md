@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.2.1] - 2026-05-18
+
+### Changed
+
+- Added concise rustdoc coverage across the public MetricKit wrapper surface outside the FFI modules, including Apple counterpart references on the documented types and fields.
+
 ## [0.2.0] - 2026-05-16
 
 ### Added

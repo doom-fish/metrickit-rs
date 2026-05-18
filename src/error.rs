@@ -5,15 +5,25 @@ use libc::free;
 
 use crate::ffi;
 
+/// Error returned by MetricKit bridge operations.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum MetricKitError {
+    /// Indicates that the caller supplied an invalid argument.
     InvalidArgument(String),
+    /// Indicates that the MetricKit bridge reported a framework failure.
     FrameworkError(String),
-    Unknown { code: i32, message: String },
+    /// Captures an unknown bridge status code and message.
+    Unknown {
+        /// Stores the raw bridge status code.
+        code: i32,
+        /// Stores the raw bridge error message.
+        message: String,
+    },
 }
 
 impl MetricKitError {
+    /// Returns the bridge status code associated with this error.
     #[must_use]
     pub const fn code(&self) -> i32 {
         match self {
@@ -23,6 +33,7 @@ impl MetricKitError {
         }
     }
 
+    /// Returns the bridge error message associated with this error.
     #[must_use]
     pub fn message(&self) -> &str {
         match self {

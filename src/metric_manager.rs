@@ -12,6 +12,7 @@ use crate::metric_payload::MetricPayload;
 use crate::private::{decode_json, to_cstring};
 use crate::signpost::MetricLogHandle;
 
+/// Task identifier used with MetricKit extended launch APIs.
 pub type LaunchTaskId = String;
 
 #[derive(Deserialize)]
@@ -24,11 +25,14 @@ struct MetricManagerEvent {
     diagnostic_payloads: Vec<DiagnosticPayload>,
 }
 
+/// Delegate trait mirroring `MXMetricManagerSubscriber` delivery callbacks.
 pub trait MetricSubscriberDelegate: Send {
+    /// Handles MetricKit metric payload delivery from `MXMetricManagerSubscriber`.
     fn did_receive_metric_payloads(&mut self, payloads: Vec<MetricPayload>) {
         let _ = payloads;
     }
 
+    /// Handles MetricKit diagnostic payload delivery from `MXMetricManagerSubscriber`.
     fn did_receive_diagnostic_payloads(&mut self, payloads: Vec<DiagnosticPayload>) {
         let _ = payloads;
     }
@@ -37,6 +41,7 @@ pub trait MetricSubscriberDelegate: Send {
 type MetricPayloadHandler = Box<dyn FnMut(Vec<MetricPayload>) + Send + 'static>;
 type DiagnosticPayloadHandler = Box<dyn FnMut(Vec<DiagnosticPayload>) + Send + 'static>;
 
+/// Builder-style delegate adapter for `MXMetricManagerSubscriber` callbacks.
 #[allow(clippy::type_complexity)]
 pub struct MetricSubscriberCallbacks {
     metric_payloads: Option<MetricPayloadHandler>,
@@ -44,6 +49,7 @@ pub struct MetricSubscriberCallbacks {
 }
 
 impl MetricSubscriberCallbacks {
+    /// Creates an empty callback adapter for `MXMetricManagerSubscriber` events.
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -52,6 +58,7 @@ impl MetricSubscriberCallbacks {
         }
     }
 
+    /// Registers a handler for metric payload delivery from `MXMetricManagerSubscriber`.
     #[must_use]
     pub fn on_metric_payloads(
         mut self,
@@ -61,6 +68,7 @@ impl MetricSubscriberCallbacks {
         self
     }
 
+    /// Registers a handler for diagnostic payload delivery from `MXMetricManagerSubscriber`.
     #[must_use]
     pub fn on_diagnostic_payloads(
         mut self,
@@ -95,11 +103,13 @@ struct CallbackState {
     delegate: Mutex<Box<dyn MetricSubscriberDelegate>>,
 }
 
+/// Active subscriber registration returned by `MXMetricManager.add(_:)`.
 pub struct MetricSubscription {
     raw: *mut c_void,
     _callback_state: Box<CallbackState>,
 }
 
+/// Rust handle for MetricKit's shared `MXMetricManager`.
 pub struct MetricManager;
 
 unsafe extern "C" fn metric_event_trampoline(user_info: *mut c_void, payload_json: *const c_char) {
@@ -134,16 +144,19 @@ unsafe extern "C" fn metric_event_trampoline(user_info: *mut c_void, payload_jso
 }
 
 impl MetricManager {
+    /// Returns the shared `MXMetricManager` handle.
     #[must_use]
     pub const fn shared() -> Self {
         Self
     }
 
+    /// Returns the shared `MXMetricManager` handle using Apple's naming.
     #[must_use]
     pub const fn shared_manager() -> Self {
         Self
     }
 
+    /// Returns cached `MXMetricPayload` values from MetricKit.
     pub fn past_payloads(&self) -> Result<Vec<MetricPayload>, MetricKitError> {
         let ptr = unsafe { ffi::manager::mx_metric_manager_past_payloads_json() };
         if ptr.is_null() {
@@ -152,6 +165,7 @@ impl MetricManager {
         decode_json(ptr)
     }
 
+    /// Returns cached `MXDiagnosticPayload` values from MetricKit.
     pub fn past_diagnostic_payloads(&self) -> Result<Vec<DiagnosticPayload>, MetricKitError> {
         let ptr = unsafe { ffi::manager::mx_metric_manager_past_diagnostic_payloads_json() };
         if ptr.is_null() {
@@ -160,6 +174,7 @@ impl MetricManager {
         decode_json(ptr)
     }
 
+    /// Creates a MetricKit signpost log handle via `MXMetricManager.makeLogHandle(category:)`.
     pub fn make_log_handle(
         &self,
         category: impl AsRef<str>,
@@ -190,6 +205,7 @@ impl MetricManager {
         ))
     }
 
+    /// Calls `MXMetricManager.extendLaunchMeasurement(forTaskID:)`.
     pub fn extend_launch_measurement(
         &self,
         task_id: impl AsRef<str>,
@@ -200,6 +216,7 @@ impl MetricManager {
         )
     }
 
+    /// Calls `MXMetricManager.finishExtendedLaunchMeasurement(forTaskID:)`.
     pub fn finish_extended_launch_measurement(
         &self,
         task_id: impl AsRef<str>,
@@ -210,6 +227,7 @@ impl MetricManager {
         )
     }
 
+    /// Registers an `MXMetricManagerSubscriber` delegate with MetricKit.
     pub fn subscribe<D>(&self, delegate: D) -> Result<MetricSubscription, MetricKitError>
     where
         D: MetricSubscriberDelegate + 'static,
@@ -266,10 +284,12 @@ impl Default for MetricManager {
 }
 
 impl MetricSubscription {
+    /// Unregisters this `MXMetricManagerSubscriber` handle.
     pub fn unsubscribe(self) {
         drop(self);
     }
 
+    /// Returns whether this subscriber handle is still active.
     #[must_use]
     pub fn is_active(&self) -> bool {
         !self.raw.is_null()

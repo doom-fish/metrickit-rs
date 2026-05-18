@@ -7,22 +7,29 @@ use crate::diagnostic::Diagnostic;
 use crate::error::MetricKitError;
 use crate::private::{to_json_string, to_json_value};
 
+/// Rust representation of MetricKit's `MXCPUExceptionDiagnostic`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CpuExceptionDiagnostic {
+    /// Embeds the shared `MXDiagnostic` fields.
     #[serde(flatten)]
     pub diagnostic: Diagnostic,
+    /// Mirrors `MXCPUExceptionDiagnostic.callStackTree`.
     pub call_stack_tree: CallStackTree,
+    /// Mirrors `MXCPUExceptionDiagnostic.totalCPUTime`.
     #[serde(rename = "totalCPUTime")]
     pub total_cpu_time: Measurement,
+    /// Mirrors `MXCPUExceptionDiagnostic.totalSampledTime`.
     pub total_sampled_time: Measurement,
 }
 
 impl CpuExceptionDiagnostic {
+    /// Returns the JSON representation of this `MXCPUExceptionDiagnostic` model.
     pub fn json_representation(&self) -> Result<String, MetricKitError> {
         to_json_string(self)
     }
 
+    /// Returns the dictionary representation of this `MXCPUExceptionDiagnostic` model.
     pub fn dictionary_representation(&self) -> Result<Value, MetricKitError> {
         to_json_value(self)
     }
