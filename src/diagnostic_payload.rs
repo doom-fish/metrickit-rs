@@ -8,7 +8,7 @@ use crate::error::MetricKitError;
 use crate::hang_diagnostic::HangDiagnostic;
 use crate::private::{to_json_string, to_json_value};
 
-/// Rust representation of MetricKit's `MXDiagnosticPayload`.
+/// Rust representation of `MetricKit`'s `MXDiagnosticPayload`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DiagnosticPayload {

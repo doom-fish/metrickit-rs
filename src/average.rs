@@ -1,14 +1,14 @@
 use serde::{Deserialize, Serialize};
 
-/// Rust representation of a MetricKit measurement value.
+/// Rust representation of a `MetricKit` measurement value.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Measurement {
-    /// Stores the numeric component emitted by MetricKit.
+    /// Stores the numeric component emitted by `MetricKit`.
     pub value: f64,
-    /// Stores the unit symbol emitted by MetricKit.
+    /// Stores the unit symbol emitted by `MetricKit`.
     pub unit_symbol: String,
-    /// Stores the unit type emitted by MetricKit.
+    /// Stores the unit type emitted by `MetricKit`.
     pub unit_type: String,
 }
 
@@ -23,14 +23,14 @@ impl Measurement {
         }
     }
 
-    /// Returns whether this MetricKit measurement is unitless.
+    /// Returns whether this `MetricKit` measurement is unitless.
     #[must_use]
     pub fn is_dimensionless(&self) -> bool {
         self.unit_type == "Unit"
     }
 }
 
-/// Rust representation of MetricKit's `MXAverage`.
+/// Rust representation of `MetricKit`'s `MXAverage`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Average {

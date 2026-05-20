@@ -4,7 +4,7 @@ use serde_json::Value;
 use crate::error::MetricKitError;
 use crate::private::to_json_string;
 
-/// Rust representation of MetricKit's `MXCallStackTree`.
+/// Rust representation of `MetricKit`'s `MXCallStackTree`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct CallStackTree(

@@ -16,42 +16,42 @@
     clippy::new_without_default
 )]
 
-/// MetricKit average and measurement models.
+/// `MetricKit` average and measurement models.
 pub mod average;
-/// MetricKit call-stack tree models.
+/// `MetricKit` call-stack tree models.
 pub mod call_stack_tree;
-/// MetricKit CPU exception diagnostic models.
+/// `MetricKit` CPU exception diagnostic models.
 pub mod cpu_exception_diagnostic;
-/// MetricKit crash diagnostic models.
+/// `MetricKit` crash diagnostic models.
 pub mod crash_diagnostic;
-/// Shared MetricKit diagnostic context models.
+/// Shared `MetricKit` diagnostic context models.
 pub mod diagnostic;
-/// MetricKit diagnostic payload models.
+/// `MetricKit` diagnostic payload models.
 pub mod diagnostic_payload;
-/// MetricKit disk-write exception diagnostic models.
+/// `MetricKit` disk-write exception diagnostic models.
 pub mod disk_write_exception_diagnostic;
-/// Error types returned by the MetricKit wrapper.
+/// Error types returned by the `MetricKit` wrapper.
 pub mod error;
-/// Low-level FFI bindings backing the MetricKit wrapper.
+/// Low-level FFI bindings backing the `MetricKit` wrapper.
 pub mod ffi;
-/// MetricKit hang diagnostic models.
+/// `MetricKit` hang diagnostic models.
 pub mod hang_diagnostic;
-/// MetricKit histogram models.
+/// `MetricKit` histogram models.
 pub mod histogram;
-/// Re-exports for MetricKit manager types.
+/// Re-exports for `MetricKit` manager types.
 pub mod manager;
-/// MetricKit metadata models.
+/// `MetricKit` metadata models.
 pub mod meta_data;
-/// MetricKit metric models.
+/// `MetricKit` metric models.
 pub mod metric;
-/// MetricKit manager and subscriber APIs.
+/// `MetricKit` manager and subscriber APIs.
 pub mod metric_manager;
-/// MetricKit metric payload models.
+/// `MetricKit` metric payload models.
 pub mod metric_payload;
-/// Aggregated MetricKit model re-exports.
+/// Aggregated `MetricKit` model re-exports.
 pub mod metrics;
 mod private;
-/// MetricKit signpost models and helpers.
+/// `MetricKit` signpost models and helpers.
 pub mod signpost;
 
 pub use average::{Average, Measurement};

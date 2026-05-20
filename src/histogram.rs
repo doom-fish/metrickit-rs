@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::average::Measurement;
 
-/// Rust representation of MetricKit's `MXHistogramBucket`.
+/// Rust representation of `MetricKit`'s `MXHistogramBucket`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct HistogramBucket {
@@ -14,7 +14,7 @@ pub struct HistogramBucket {
     pub bucket_count: u64,
 }
 
-/// Rust representation of MetricKit's `MXHistogram`.
+/// Rust representation of `MetricKit`'s `MXHistogram`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Histogram {

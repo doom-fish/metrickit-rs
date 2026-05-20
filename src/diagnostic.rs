@@ -6,7 +6,7 @@ use crate::meta_data::MetaData;
 use crate::private::{to_json_string, to_json_value};
 use crate::signpost::SignpostRecord;
 
-/// Rust representation of MetricKit's shared `MXDiagnostic` fields.
+/// Rust representation of `MetricKit`'s shared `MXDiagnostic` fields.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Diagnostic {

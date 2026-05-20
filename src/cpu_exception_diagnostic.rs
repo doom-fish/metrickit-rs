@@ -7,7 +7,7 @@ use crate::diagnostic::Diagnostic;
 use crate::error::MetricKitError;
 use crate::private::{to_json_string, to_json_value};
 
-/// Rust representation of MetricKit's `MXCPUExceptionDiagnostic`.
+/// Rust representation of `MetricKit`'s `MXCPUExceptionDiagnostic`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CpuExceptionDiagnostic {

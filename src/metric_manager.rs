@@ -12,7 +12,7 @@ use crate::metric_payload::MetricPayload;
 use crate::private::{decode_json, to_cstring};
 use crate::signpost::MetricLogHandle;
 
-/// Task identifier used with MetricKit extended launch APIs.
+/// Task identifier used with `MetricKit` extended launch APIs.
 pub type LaunchTaskId = String;
 
 #[derive(Deserialize)]
@@ -27,12 +27,12 @@ struct MetricManagerEvent {
 
 /// Delegate trait mirroring `MXMetricManagerSubscriber` delivery callbacks.
 pub trait MetricSubscriberDelegate: Send {
-    /// Handles MetricKit metric payload delivery from `MXMetricManagerSubscriber`.
+    /// Handles `MetricKit` metric payload delivery from `MXMetricManagerSubscriber`.
     fn did_receive_metric_payloads(&mut self, payloads: Vec<MetricPayload>) {
         let _ = payloads;
     }
 
-    /// Handles MetricKit diagnostic payload delivery from `MXMetricManagerSubscriber`.
+    /// Handles `MetricKit` diagnostic payload delivery from `MXMetricManagerSubscriber`.
     fn did_receive_diagnostic_payloads(&mut self, payloads: Vec<DiagnosticPayload>) {
         let _ = payloads;
     }
@@ -109,7 +109,7 @@ pub struct MetricSubscription {
     _callback_state: Box<CallbackState>,
 }
 
-/// Rust handle for MetricKit's shared `MXMetricManager`.
+/// Rust handle for `MetricKit`'s shared `MXMetricManager`.
 pub struct MetricManager;
 
 unsafe extern "C" fn metric_event_trampoline(user_info: *mut c_void, payload_json: *const c_char) {
@@ -156,7 +156,7 @@ impl MetricManager {
         Self
     }
 
-    /// Returns cached `MXMetricPayload` values from MetricKit.
+    /// Returns cached `MXMetricPayload` values from `MetricKit`.
     pub fn past_payloads(&self) -> Result<Vec<MetricPayload>, MetricKitError> {
         let ptr = unsafe { ffi::manager::mx_metric_manager_past_payloads_json() };
         if ptr.is_null() {
@@ -165,7 +165,7 @@ impl MetricManager {
         decode_json(ptr)
     }
 
-    /// Returns cached `MXDiagnosticPayload` values from MetricKit.
+    /// Returns cached `MXDiagnosticPayload` values from `MetricKit`.
     pub fn past_diagnostic_payloads(&self) -> Result<Vec<DiagnosticPayload>, MetricKitError> {
         let ptr = unsafe { ffi::manager::mx_metric_manager_past_diagnostic_payloads_json() };
         if ptr.is_null() {
@@ -174,7 +174,7 @@ impl MetricManager {
         decode_json(ptr)
     }
 
-    /// Creates a MetricKit signpost log handle via `MXMetricManager.makeLogHandle(category:)`.
+    /// Creates a `MetricKit` signpost log handle via `MXMetricManager.makeLogHandle(category:)`.
     pub fn make_log_handle(
         &self,
         category: impl AsRef<str>,
@@ -227,7 +227,7 @@ impl MetricManager {
         )
     }
 
-    /// Registers an `MXMetricManagerSubscriber` delegate with MetricKit.
+    /// Registers an `MXMetricManagerSubscriber` delegate with `MetricKit`.
     pub fn subscribe<D>(&self, delegate: D) -> Result<MetricSubscription, MetricKitError>
     where
         D: MetricSubscriberDelegate + 'static,

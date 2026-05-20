@@ -4,7 +4,7 @@ use serde_json::Value;
 use crate::error::MetricKitError;
 use crate::private::{to_json_string, to_json_value};
 
-/// Rust representation of MetricKit's `MXMetaData`.
+/// Rust representation of `MetricKit`'s `MXMetaData`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MetaData {
@@ -16,15 +16,15 @@ pub struct MetaData {
     pub device_type: String,
     /// Mirrors `MXMetaData.applicationBuildVersion`.
     pub application_build_version: String,
-    /// Mirrors `MXMetaData.platformArchitecture` when MetricKit provides it.
+    /// Mirrors `MXMetaData.platformArchitecture` when `MetricKit` provides it.
     pub platform_architecture: Option<String>,
-    /// Mirrors `MXMetaData.lowPowerModeEnabled` when MetricKit provides it.
+    /// Mirrors `MXMetaData.lowPowerModeEnabled` when `MetricKit` provides it.
     pub low_power_mode_enabled: Option<bool>,
-    /// Mirrors `MXMetaData.isTestFlightApp` when MetricKit provides it.
+    /// Mirrors `MXMetaData.isTestFlightApp` when `MetricKit` provides it.
     pub is_test_flight_app: Option<bool>,
-    /// Mirrors `MXMetaData.pid` when MetricKit provides it.
+    /// Mirrors `MXMetaData.pid` when `MetricKit` provides it.
     pub pid: Option<i32>,
-    /// Mirrors `MXMetaData.bundleIdentifier` when MetricKit provides it.
+    /// Mirrors `MXMetaData.bundleIdentifier` when `MetricKit` provides it.
     pub bundle_identifier: Option<String>,
 }
 

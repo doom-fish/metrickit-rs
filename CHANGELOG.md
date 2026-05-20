@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.2.2] - 2026-05-20
+
+- Clippy hygiene sweep: cleared all `-D warnings` lints across the crate. No public API change.
+
 ## [0.2.1] - 2026-05-18
 
 ### Changed

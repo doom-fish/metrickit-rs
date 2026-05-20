@@ -5,13 +5,13 @@ use libc::free;
 
 use crate::ffi;
 
-/// Error returned by MetricKit bridge operations.
+/// Error returned by `MetricKit` bridge operations.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum MetricKitError {
     /// Indicates that the caller supplied an invalid argument.
     InvalidArgument(String),
-    /// Indicates that the MetricKit bridge reported a framework failure.
+    /// Indicates that the `MetricKit` bridge reported a framework failure.
     FrameworkError(String),
     /// Captures an unknown bridge status code and message.
     Unknown {
