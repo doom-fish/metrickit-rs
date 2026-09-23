@@ -29,3 +29,26 @@ fn metric_payload_with_null_timestamps_still_decodes() -> Result<(), Box<dyn std
     assert_eq!(payload.latest_application_version, "1.2.3");
     Ok(())
 }
+
+#[test]
+fn apple_json_representation_is_kept_apart_from_the_crate_schema(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let apple_json = r#"{"appVersion":"1.2.3","timeStampBegin":"2026-09-22 00:00:00"}"#;
+    let mut bridged = common::sample_metric_payload().dictionary_representation()?;
+    bridged["appleJSONRepresentation"] = serde_json::Value::String(apple_json.to_owned());
+
+    let payload: metrickit::MetricPayload = serde_json::from_value(bridged)?;
+    assert_eq!(
+        payload.apple_json_representation.as_deref(),
+        Some(apple_json)
+    );
+    assert!(!payload
+        .json_representation()?
+        .contains("appleJSONRepresentation"));
+    assert!(payload.dictionary_representation()?["appleJSONRepresentation"].is_null());
+    assert_eq!(
+        common::sample_metric_payload().apple_json_representation,
+        None
+    );
+    Ok(())
+}

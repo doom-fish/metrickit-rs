@@ -33,3 +33,16 @@ fn diagnostic_payload_with_null_timestamps_still_decodes() -> Result<(), Box<dyn
     assert!(payload.time_stamp_end.is_finite());
     Ok(())
 }
+
+#[test]
+fn diagnostic_payload_carries_apple_json_when_bridged() -> Result<(), Box<dyn std::error::Error>> {
+    let mut bridged = common::sample_diagnostic_payload().dictionary_representation()?;
+    bridged["appleJSONRepresentation"] = serde_json::Value::String("{}".to_owned());
+
+    let payload: metrickit::DiagnosticPayload = serde_json::from_value(bridged)?;
+    assert_eq!(payload.apple_json_representation.as_deref(), Some("{}"));
+    assert!(!payload
+        .json_representation()?
+        .contains("appleJSONRepresentation"));
+    Ok(())
+}

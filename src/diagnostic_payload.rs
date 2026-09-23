@@ -30,15 +30,17 @@ pub struct DiagnosticPayload {
     /// Mirrors `MXDiagnosticPayload.diskWriteExceptionDiagnostics`.
     #[serde(default)]
     pub disk_write_exception_diagnostics: Vec<DiskWriteExceptionDiagnostic>,
+    #[serde(default, rename = "appleJSONRepresentation", skip_serializing)]
+    pub apple_json_representation: Option<String>,
 }
 
 impl DiagnosticPayload {
-    /// Returns the JSON representation of this `MXDiagnosticPayload` model.
+    /// Returns this payload in the crate's own serde schema, which is not the output of `MXDiagnosticPayload.jsonRepresentation()`.
     pub fn json_representation(&self) -> Result<String, MetricKitError> {
         to_json_string(self)
     }
 
-    /// Returns the dictionary representation of this `MXDiagnosticPayload` model.
+    /// Returns this payload as a JSON value in the crate's own serde schema, not Apple's `dictionaryRepresentation()`.
     pub fn dictionary_representation(&self) -> Result<Value, MetricKitError> {
         to_json_value(self)
     }

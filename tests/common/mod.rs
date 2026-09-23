@@ -298,6 +298,7 @@ pub fn sample_metric_payload() -> MetricPayload {
         disk_space_usage_metrics: Some(sample_disk_space_usage_metric()),
         signpost_metrics: vec![sample_signpost_metric()],
         meta_data: Some(sample_meta_data()),
+        apple_json_representation: None,
     }
 }
 
@@ -358,5 +359,6 @@ pub fn sample_diagnostic_payload() -> DiagnosticPayload {
         hang_diagnostics: vec![sample_hang_diagnostic()],
         cpu_exception_diagnostics: vec![sample_cpu_exception_diagnostic()],
         disk_write_exception_diagnostics: vec![sample_disk_write_exception_diagnostic()],
+        apple_json_representation: None,
     }
 }

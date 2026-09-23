@@ -1,12 +1,15 @@
 # metrickit-rs coverage audit (vs MacOSX26.2.sdk)
 
-SDK_PUBLIC_SYMBOLS: 61
-VERIFIED: 54
+SDK_PUBLIC_SYMBOLS: 65
+VERIFIED: 51
+PARTIAL: 7
 GAPS: 0
 EXEMPT: 7
-COVERAGE_PCT: 100.00%
+COVERAGE_PCT: 87.93%
 
 This audit compares `metrickit-rs` with the macOS 26.2 `MetricKit.framework` headers. Counts follow the grouped SDK API entries listed below; `EXEMPT` rows are intentionally excluded from the coverage percentage.
+
+_Corrected on 2026-09-23: rows that combined properties with `JSONRepresentation` / `dictionaryRepresentation` are split, and JSON rows where the crate serializes its own serde schema instead of Apple's output are counted as PARTIAL, not VERIFIED. Payload `JSONRepresentation` stays VERIFIED through `apple_json_representation`. COVERAGE_PCT is VERIFIED / (SDK_PUBLIC_SYMBOLS - EXEMPT) over the grouped header entries below. Re-checked against the installed MacOSX26.5.sdk headers: no new macOS-available symbols._
 
 ## 🟢 VERIFIED
 | Symbol | Kind | Header | Wrapped by |
@@ -24,12 +27,10 @@ This audit compares `metrickit-rs` with the macOS 26.2 `MetricKit.framework` hea
 | `MXAverage (averageMeasurement, sampleCount, standardDeviation)` | type group | `MXAverage.h` | Average + Measurement. |
 | `MXHistogramBucket (bucketStart, bucketEnd, bucketCount)` | type group | `MXHistogram.h` | HistogramBucket. |
 | `MXHistogram (totalBucketCount, bucketEnumerator)` | type group | `MXHistogram.h` | Histogram with owned bucket vector. |
-| `MXCallStackTree.JSONRepresentation` | method group | `MXCallStackTree.h` | CallStackTree::json_representation. |
+| `MXCallStackTree.JSONRepresentation` | method group | `MXCallStackTree.h` | CallStackTree holds Apple's JSON tree as a serde_json::Value; json_representation re-serializes it. |
 | `MXMetaData properties (regionFormat, osVersion, deviceType, applicationBuildVersion, platformArchitecture, lowPowerModeEnabled, isTestFlightApp, pid, bundleIdentifier)` | property group | `MXMetaData.h` | MetaData covers the full macOS property set. |
-| `JSONRepresentation / dictionaryRepresentation` | method group | `MXMetaData.h` | MetaData::{json_representation,dictionary_representation}. |
 | `MXUnitSignalBars.bars` | class property | `MXUnit.h` | SIGNAL_BARS_UNIT_SYMBOL constant plus typed Measurement values. |
 | `MXUnitAveragePixelLuminance.apl` | class property | `MXUnit.h` | AVERAGE_PIXEL_LUMINANCE_UNIT_SYMBOL constant plus typed Measurement values. |
-| `MXMetric.JSONRepresentation / dictionaryRepresentation` | method group | `MXMetric.h` | Every concrete metric wrapper exposes json_representation and dictionary_representation. |
 | `MXCPUMetric (cumulativeCPUTime, cumulativeCPUInstructions)` | type group | `MXCPUMetric.h` | CpuMetric. |
 | `MXMemoryMetric (peakMemoryUsage, averageSuspendedMemory)` | type group | `MXMemoryMetric.h` | MemoryMetric. |
 | `MXGPUMetric (cumulativeGPUTime)` | type group | `MXGPUMetric.h` | GpuMetric. |
@@ -50,21 +51,31 @@ This audit compares `metrickit-rs` with the macOS 26.2 `MetricKit.framework` hea
 | `MXSignpostMetric (signpostName, signpostCategory, signpostIntervalData, totalCount)` | type group | `MXSignpostMetric.h` | SignpostMetric. |
 | `MXMetricPayload metadata (latestApplicationVersion, includesMultipleApplicationVersions, timestamps)` | property group | `MXMetricPayload.h` | MetricPayload. |
 | `cpuMetrics, memoryMetrics, gpuMetrics, animationMetrics, applicationLaunchMetrics, applicationResponsivenessMetrics, applicationTimeMetrics, locationActivityMetrics, networkTransferMetrics, diskIOMetrics, displayMetrics, cellularConditionMetrics, applicationExitMetrics, diskSpaceUsageMetrics, signpostMetrics, metaData` | property group | `MXMetricPayload.h` | All macOS payload properties are modeled in MetricPayload. |
-| `JSONRepresentation / dictionaryRepresentation` | method group | `MXMetricPayload.h` | MetricPayload::{json_representation,dictionary_representation}. |
+| `JSONRepresentation` | method | `MXMetricPayload.h` | MetricPayload::apple_json_representation (Apple's output); json_representation is the crate schema. |
 | `MXDiagnosticPayload timestamps + crash/hang/CPU/disk-write arrays` | property group | `MXDiagnosticPayload.h` | DiagnosticPayload. |
-| `JSONRepresentation / dictionaryRepresentation` | method group | `MXDiagnosticPayload.h` | DiagnosticPayload::{json_representation,dictionary_representation}. |
+| `JSONRepresentation` | method | `MXDiagnosticPayload.h` | DiagnosticPayload::apple_json_representation (Apple's output); json_representation is the crate schema. |
 | `MXDiagnostic (metaData, applicationVersion, signpostData)` | type group | `MXDiagnostic.h` | Diagnostic base wrapper plus typed signpost records. |
-| `JSONRepresentation / dictionaryRepresentation` | method group | `MXDiagnostic.h` | Diagnostic::{json_representation,dictionary_representation}. |
-| `all six properties + JSONRepresentation / dictionaryRepresentation` | type group | `MXCrashDiagnosticObjectiveCExceptionReason.h` | CrashDiagnosticObjectiveCExceptionReason. |
+| `all six properties` | type group | `MXCrashDiagnosticObjectiveCExceptionReason.h` | CrashDiagnosticObjectiveCExceptionReason. |
 | `MXCrashDiagnostic (callStackTree, terminationReason, virtualMemoryRegionInfo, exceptionType, exceptionCode, signal, exceptionReason)` | type group | `MXCrashDiagnostic.h` | CrashDiagnostic. |
 | `MXHangDiagnostic (callStackTree, hangDuration)` | type group | `MXHangDiagnostic.h` | HangDiagnostic. |
 | `MXCPUExceptionDiagnostic (callStackTree, totalCPUTime, totalSampledTime)` | type group | `MXCPUExceptionDiagnostic.h` | CpuExceptionDiagnostic. |
 | `MXDiskWriteExceptionDiagnostic (callStackTree, totalWritesCaused)` | type group | `MXDiskWriteExceptionDiagnostic.h` | DiskWriteExceptionDiagnostic. |
-| `MXSignpostEventEmit` | function-like macro | `MXSignpost.h` | MetricLogHandle::emit_event. |
-| `MXSignpostIntervalBegin` | function-like macro | `MXSignpost.h` | MetricLogHandle::interval_begin. |
-| `MXSignpostAnimationIntervalBegin` | function-like macro | `MXSignpost.h` | MetricLogHandle::animation_interval_begin. |
-| `MXSignpostIntervalEnd` | function-like macro | `MXSignpost.h` | MetricLogHandle::interval_end. |
-| `MXSignpostRecord fields + JSONRepresentation / dictionaryRepresentation` | type group | `MXSignpostRecord.h` | SignpostRecord. |
+| `MXSignpostEventEmit` | function-like macro | `MXSignpost.h` | MetricLogHandle::emit_event (name: &'static CStr literal). |
+| `MXSignpostIntervalBegin` | function-like macro | `MXSignpost.h` | MetricLogHandle::interval_begin (name: &'static CStr literal). |
+| `MXSignpostAnimationIntervalBegin` | function-like macro | `MXSignpost.h` | MetricLogHandle::animation_interval_begin (name: &'static CStr literal). |
+| `MXSignpostIntervalEnd` | function-like macro | `MXSignpost.h` | MetricLogHandle::interval_end (name: &'static CStr literal). |
+| `MXSignpostRecord fields` | type group | `MXSignpostRecord.h` | SignpostRecord. |
+
+## 🟡 PARTIAL
+| Symbol | Kind | Header | Notes |
+| --- | --- | --- | --- |
+| `JSONRepresentation / dictionaryRepresentation` | method group | `MXMetaData.h` | MetaData::{json_representation,dictionary_representation} serialize the crate schema, not Apple's output. |
+| `MXMetric.JSONRepresentation / dictionaryRepresentation` | method group | `MXMetric.h` | Concrete metric wrappers serialize the crate schema; Apple's per-metric JSON is not exposed. |
+| `dictionaryRepresentation` | method | `MXMetricPayload.h` | MetricPayload::dictionary_representation returns the crate schema. |
+| `dictionaryRepresentation` | method | `MXDiagnosticPayload.h` | DiagnosticPayload::dictionary_representation returns the crate schema. |
+| `JSONRepresentation / dictionaryRepresentation` | method group | `MXDiagnostic.h` | Diagnostic and concrete diagnostics serialize the crate schema. |
+| `JSONRepresentation / dictionaryRepresentation` | method group | `MXCrashDiagnosticObjectiveCExceptionReason.h` | Crate schema, not Apple's output. |
+| `JSONRepresentation / dictionaryRepresentation` | method group | `MXSignpostRecord.h` | Crate schema, not Apple's output. |
 
 ## 🔴 GAPS
 No current gaps identified in the macOS-available `MetricKit` surface.
@@ -79,5 +90,5 @@ No current gaps identified in the macOS-available `MetricKit` surface.
 | `DictionaryRepresentation (deprecated Objective-C spelling)` | deprecated method | `MXMetricPayload.h` | macOS-unavailable Objective-C-only spelling. | `API_DEPRECATED_WITH_REPLACEMENT("Use dictionaryRepresentation", ios(13.0, API_TO_BE_DEPRECATED)) API_UNAVAILABLE(macos, tvos, watchos) NS_REFINED_FOR_SWIFT` |
 | `appLaunchDiagnostics` | unavailable property | `MXDiagnosticPayload.h` | iOS-only API; unavailable on macOS. | `API_AVAILABLE(ios(16.0)) API_UNAVAILABLE(macos, tvos, watchos)` |
 | `MXAppLaunchDiagnostic` | unavailable class | `MXAppLaunchDiagnostic.h` | iOS-only API; unavailable on macOS. | `API_AVAILABLE(ios(16.0)) API_UNAVAILABLE(macos, tvos, watchos)` |
-| `_MXSignpostMetricsSnapshot and _MXSignpost* helper macros` | private helper group | `MXSignpost_Private.h` | Header explicitly marks these implementation details as “DO NOT CALL DIRECTLY”; the public MXSignpost.h API is implemented instead. | `#pragma mark - Implementation details. DO NOT CALL DIRECTLY` |
+| `_MXSignpostMetricsSnapshot and _MXSignpost* helper macros` | private helper group | `MXSignpost_Private.h` | Not exposed as Rust API. The header marks these as “DO NOT CALL DIRECTLY”, but the signpost shim expands the same _MXSignpostMetricsSnapshot() payload the public MXSignpost* macros expand to, because those macros need a compile-time name literal. | `#pragma mark - Implementation details. DO NOT CALL DIRECTLY` |
 | `MXErrorDomain / MXErrorCode` | constant/enum group | `MXError.h` | iOS-only API; unavailable on macOS. | `API_AVAILABLE(ios(16.0)) API_UNAVAILABLE(macos, tvos, watchos)` |

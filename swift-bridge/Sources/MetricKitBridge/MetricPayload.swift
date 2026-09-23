@@ -28,5 +28,6 @@ func mxMetricPayload(_ payload: MXMetricPayload) -> [String: Any] {
         }(),
         "signpostMetrics": payload.signpostMetrics?.map(mxSignpostMetric) ?? [],
         "metaData": payload.metaData.map(mxMetaData) ?? NSNull(),
+        "appleJSONRepresentation": String(data: payload.jsonRepresentation(), encoding: .utf8) ?? NSNull(),
     ]
 }

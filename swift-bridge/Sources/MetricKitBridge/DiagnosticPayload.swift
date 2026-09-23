@@ -23,5 +23,6 @@ func mxDiagnosticPayload(_ payload: MXDiagnosticPayload) -> [String: Any] {
         "cpuExceptionDiagnostics": payload.cpuExceptionDiagnostics?.map(mxCPUExceptionDiagnostic) ?? [],
         "diskWriteExceptionDiagnostics": payload.diskWriteExceptionDiagnostics?.map(mxDiskWriteExceptionDiagnostic) ?? [],
         "appLaunchDiagnostics": [],
+        "appleJSONRepresentation": String(data: payload.jsonRepresentation(), encoding: .utf8) ?? NSNull(),
     ]
 }
