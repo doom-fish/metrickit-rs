@@ -4,7 +4,9 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use metrickit::{MetricManager, MetricSubscriberCallbacks, MetricSubscriberDelegate};
+use metrickit::{
+    MetricKitError, MetricManager, MetricSubscriberCallbacks, MetricSubscriberDelegate,
+};
 
 struct DropCounter(Arc<AtomicUsize>);
 
@@ -69,4 +71,23 @@ fn unsubscribing_releases_the_delegate_once_metrickit_lets_go(
     }
     assert_eq!(drops.load(Ordering::SeqCst), 1);
     Ok(())
+}
+
+#[test]
+fn extended_launch_measurement_off_the_main_thread_fails_instead_of_blocking() {
+    let manager = MetricManager::shared();
+    let outcomes = std::thread::spawn(move || {
+        [
+            manager.extend_launch_measurement("metrickit-rs-test-task"),
+            manager.finish_extended_launch_measurement("metrickit-rs-test-task"),
+        ]
+    })
+    .join()
+    .expect("worker thread should not panic");
+
+    for outcome in outcomes {
+        let error = outcome.expect_err("off-main launch measurement must fail");
+        assert!(matches!(error, MetricKitError::MainThreadRequired(_)));
+        assert_eq!(error.code(), -3);
+    }
 }

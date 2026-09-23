@@ -7,6 +7,7 @@ pub mod status {
     pub const OK: i32 = 0;
     pub const INVALID_ARGUMENT: i32 = -1;
     pub const FRAMEWORK_ERROR: i32 = -2;
+    pub const MAIN_THREAD_REQUIRED: i32 = -3;
 }
 
 pub type MetricEventCallback = Option<unsafe extern "C" fn(*mut c_void, *const c_char)>;

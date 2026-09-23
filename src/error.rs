@@ -13,6 +13,7 @@ pub enum MetricKitError {
     InvalidArgument(String),
     /// Indicates that the `MetricKit` bridge reported a framework failure.
     FrameworkError(String),
+    MainThreadRequired(String),
     /// Captures an unknown bridge status code and message.
     Unknown {
         /// Stores the raw bridge status code.
@@ -29,6 +30,7 @@ impl MetricKitError {
         match self {
             Self::InvalidArgument(_) => ffi::status::INVALID_ARGUMENT,
             Self::FrameworkError(_) => ffi::status::FRAMEWORK_ERROR,
+            Self::MainThreadRequired(_) => ffi::status::MAIN_THREAD_REQUIRED,
             Self::Unknown { code, .. } => *code,
         }
     }
@@ -39,6 +41,7 @@ impl MetricKitError {
         match self {
             Self::InvalidArgument(message)
             | Self::FrameworkError(message)
+            | Self::MainThreadRequired(message)
             | Self::Unknown { message, .. } => message,
         }
     }
@@ -72,6 +75,7 @@ pub(crate) fn from_status_message(status: i32, message: String) -> MetricKitErro
     match status {
         ffi::status::INVALID_ARGUMENT => MetricKitError::InvalidArgument(message),
         ffi::status::FRAMEWORK_ERROR => MetricKitError::FrameworkError(message),
+        ffi::status::MAIN_THREAD_REQUIRED => MetricKitError::MainThreadRequired(message),
         code => MetricKitError::Unknown { code, message },
     }
 }

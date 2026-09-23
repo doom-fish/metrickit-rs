@@ -3,6 +3,7 @@ import Foundation
 public let MX_OK: Int32 = 0
 public let MX_INVALID_ARGUMENT: Int32 = -1
 public let MX_FRAMEWORK_ERROR: Int32 = -2
+public let MX_MAIN_THREAD_REQUIRED: Int32 = -3
 
 @inline(__always)
 public func mxRetain(_ object: some AnyObject) -> UnsafeMutableRawPointer {

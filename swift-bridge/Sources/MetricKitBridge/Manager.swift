@@ -1,4 +1,3 @@
-import Dispatch
 import Foundation
 import MetricKit
 
@@ -44,13 +43,6 @@ private final class MXRustSubscriber: NSObject, MXMetricManagerSubscriber {
             "diagnosticPayloads": payloads.map(mxDiagnosticPayload),
         ])
     }
-}
-
-private func mxOnMainThread<T>(_ work: () -> T) -> T {
-    if Thread.isMainThread {
-        return work()
-    }
-    return DispatchQueue.main.sync(execute: work)
 }
 
 @_cdecl("mx_metric_manager_add_subscriber")
@@ -110,31 +102,23 @@ public func mx_metric_manager_extend_launch_measurement(
         return MX_INVALID_ARGUMENT
     }
 
+    guard Thread.isMainThread else {
+        mxWriteError(errorOut, "MXMetricManager extended launch measurement must be called on the main thread")
+        return MX_MAIN_THREAD_REQUIRED
+    }
+
     guard #available(macOS 13.0, *) else {
         mxWriteError(errorOut, "MXMetricManager extended launch measurement requires macOS 13.0")
         return MX_FRAMEWORK_ERROR
     }
 
-    var measurementError: Error?
-    let success = mxOnMainThread { () -> Bool in
-        do {
-            try MXMetricManager.extendLaunchMeasurement(forTaskID: MXLaunchTaskID(taskIDString))
-            return true
-        } catch {
-            measurementError = error
-            return false
-        }
-    }
-    if success {
+    do {
+        try MXMetricManager.extendLaunchMeasurement(forTaskID: MXLaunchTaskID(taskIDString))
         return MX_OK
+    } catch {
+        mxWriteError(errorOut, (error as NSError).localizedDescription)
+        return MX_FRAMEWORK_ERROR
     }
-
-    mxWriteError(
-        errorOut,
-        (measurementError as NSError?)?.localizedDescription
-            ?? "MetricKit failed to start the extended launch measurement"
-    )
-    return MX_FRAMEWORK_ERROR
 }
 
 @_cdecl("mx_metric_manager_finish_extended_launch_measurement")
@@ -153,29 +137,21 @@ public func mx_metric_manager_finish_extended_launch_measurement(
         return MX_INVALID_ARGUMENT
     }
 
+    guard Thread.isMainThread else {
+        mxWriteError(errorOut, "MXMetricManager extended launch measurement must be called on the main thread")
+        return MX_MAIN_THREAD_REQUIRED
+    }
+
     guard #available(macOS 13.0, *) else {
         mxWriteError(errorOut, "MXMetricManager extended launch measurement requires macOS 13.0")
         return MX_FRAMEWORK_ERROR
     }
 
-    var measurementError: Error?
-    let success = mxOnMainThread { () -> Bool in
-        do {
-            try MXMetricManager.finishExtendedLaunchMeasurement(forTaskID: MXLaunchTaskID(taskIDString))
-            return true
-        } catch {
-            measurementError = error
-            return false
-        }
-    }
-    if success {
+    do {
+        try MXMetricManager.finishExtendedLaunchMeasurement(forTaskID: MXLaunchTaskID(taskIDString))
         return MX_OK
+    } catch {
+        mxWriteError(errorOut, (error as NSError).localizedDescription)
+        return MX_FRAMEWORK_ERROR
     }
-
-    mxWriteError(
-        errorOut,
-        (measurementError as NSError?)?.localizedDescription
-            ?? "MetricKit failed to finish the extended launch measurement"
-    )
-    return MX_FRAMEWORK_ERROR
 }
