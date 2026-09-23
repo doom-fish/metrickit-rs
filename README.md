@@ -36,6 +36,28 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 - Crash, hang, CPU-exception, and disk-write diagnostics with structured Objective-C exception reasons and signpost records.
 - Twelve numbered examples and twelve integration test files covering every logical area listed in the v0.2.0 expansion.
 
+## Requirements
+
+- macOS 12 or later (the Swift bridge's deployment target).
+- Extended launch measurement needs macOS 13; signpost records and some metadata fields need macOS 14; disk-space metrics and `bundleIdentifier` need macOS 26. On older systems the launch-measurement calls return an error and those fields are `None` or empty.
+- Xcode or the Command Line Tools, so `build.rs` can run `swift build`.
+
+## Signpost names
+
+`os_signpost` records a signpost name as an offset into the emitting binary, so names must be string literals. `MetricLogHandle::emit_event`, `interval_begin`, `animation_interval_begin`, and `interval_end` take `&'static CStr` (write `c"name"`), and the bridge rejects names that are not in the binary's read-only `__TEXT` segment, such as leaked heap strings, with `MetricKitError::InvalidArgument`.
+
+## Threading
+
+`MetricManager::extend_launch_measurement` and `finish_extended_launch_measurement` must be called on the main thread, as `MXMetricManager` requires. Called from any other thread they return `MetricKitError::MainThreadRequired` instead of blocking on the main queue, which would deadlock command-line and async-runtime hosts whose main thread does not service it.
+
+Subscriber callbacks run on a `MetricKit` thread. After a `MetricSubscription` is dropped no further payloads reach the delegate; the delegate itself is dropped once `MetricKit` releases its subscriber, which can happen shortly afterwards on a `MetricKit` thread.
+
+## JSON
+
+The Rust models use the crate's own serde schema, filled in field by field by the Swift bridge. `json_representation()` and `dictionary_representation()` serialize that schema; the output is not Apple's `jsonRepresentation()` format and is not interchangeable with it. For metrics or crash-reporting backends that expect Apple's JSON, use `MetricPayload::apple_json_representation` and `DiagnosticPayload::apple_json_representation`, which hold Apple's output for payloads delivered by `MetricKit` (`None` for payloads built in Rust). `CallStackTree` holds Apple's call-stack JSON as a `serde_json::Value`.
+
+Non-finite numbers are bridged as `null`; the non-optional `f64` fields decode `null` as NaN.
+
 ## Delivery semantics
 
 `MetricKit` typically delivers aggregated payloads roughly once per day when the app is running. The examples and tests use cached payload lookups plus deterministic sample models so they succeed on a headless development machine without waiting for `MetricKit` delivery.
