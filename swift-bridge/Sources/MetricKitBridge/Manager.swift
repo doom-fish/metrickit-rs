@@ -4,15 +4,26 @@ import MetricKit
 
 public typealias MXMetricEventCallback =
     @convention(c) (UnsafeMutableRawPointer?, UnsafePointer<CChar>?) -> Void
+public typealias MXMetricEventRelease = @convention(c) (UnsafeMutableRawPointer?) -> Void
 
 private final class MXRustSubscriber: NSObject, MXMetricManagerSubscriber {
     let callback: MXMetricEventCallback
     let userInfo: UnsafeMutableRawPointer?
+    let releaseUserInfo: MXMetricEventRelease?
 
-    init(callback: @escaping MXMetricEventCallback, userInfo: UnsafeMutableRawPointer?) {
+    init(
+        callback: @escaping MXMetricEventCallback,
+        userInfo: UnsafeMutableRawPointer?,
+        releaseUserInfo: MXMetricEventRelease?
+    ) {
         self.callback = callback
         self.userInfo = userInfo
+        self.releaseUserInfo = releaseUserInfo
         super.init()
+    }
+
+    deinit {
+        releaseUserInfo?(userInfo)
     }
 
     private func emit(_ object: [String: Any]) {
@@ -46,6 +57,7 @@ private func mxOnMainThread<T>(_ work: () -> T) -> T {
 public func mx_metric_manager_add_subscriber(
     _ callback: MXMetricEventCallback?,
     _ userInfo: UnsafeMutableRawPointer?,
+    _ releaseUserInfo: MXMetricEventRelease?,
     _ outHandle: UnsafeMutablePointer<UnsafeMutableRawPointer?>,
     _ errorOut: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>?
 ) -> Int32 {
@@ -55,7 +67,11 @@ public func mx_metric_manager_add_subscriber(
         return MX_INVALID_ARGUMENT
     }
 
-    let subscriber = MXRustSubscriber(callback: callback, userInfo: userInfo)
+    let subscriber = MXRustSubscriber(
+        callback: callback,
+        userInfo: userInfo,
+        releaseUserInfo: releaseUserInfo
+    )
     MXMetricManager.shared.add(subscriber)
     outHandle.pointee = mxRetain(subscriber)
     return MX_OK

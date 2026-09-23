@@ -6,6 +6,7 @@ unsafe extern "C" {
     pub fn mx_metric_manager_add_subscriber(
         callback: MetricEventCallback,
         user_info: *mut c_void,
+        release_user_info: Option<unsafe extern "C" fn(*mut c_void)>,
         out_handle: *mut *mut c_void,
         error_out: *mut *mut c_char,
     ) -> i32;

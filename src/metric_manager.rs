@@ -1,8 +1,8 @@
-use core::ffi::{c_char, c_void};
-use std::panic::{catch_unwind, AssertUnwindSafe};
+use core::ffi::{c_char, c_void, CStr};
 use std::ptr;
-use std::sync::Mutex;
+use std::sync::{Mutex, PoisonError};
 
+use doom_fish_utils::callback_context::CallbackContext;
 use serde::Deserialize;
 
 use crate::diagnostic_payload::DiagnosticPayload;
@@ -99,48 +99,47 @@ impl MetricSubscriberDelegate for MetricSubscriberCallbacks {
     }
 }
 
-struct CallbackState {
-    delegate: Mutex<Box<dyn MetricSubscriberDelegate>>,
-}
+type SubscriberState = Mutex<Box<dyn MetricSubscriberDelegate>>;
 
 /// Active subscriber registration returned by `MXMetricManager.add(_:)`.
 pub struct MetricSubscription {
     raw: *mut c_void,
-    _callback_state: Box<CallbackState>,
+    context: CallbackContext<SubscriberState>,
 }
 
 /// Rust handle for `MetricKit`'s shared `MXMetricManager`.
 pub struct MetricManager;
 
 unsafe extern "C" fn metric_event_trampoline(user_info: *mut c_void, payload_json: *const c_char) {
-    if user_info.is_null() || payload_json.is_null() {
+    if payload_json.is_null() {
         return;
     }
 
-    let _ = catch_unwind(AssertUnwindSafe(|| {
-        let state = unsafe { &*user_info.cast::<CallbackState>() };
-        let payload_json = unsafe { core::ffi::CStr::from_ptr(payload_json) }
-            .to_string_lossy()
-            .into_owned();
-        let Ok(event): Result<MetricManagerEvent, _> = serde_json::from_str(&payload_json) else {
-            return;
-        };
+    let payload_json = unsafe { CStr::from_ptr(payload_json) };
+    unsafe {
+        CallbackContext::<SubscriberState>::with(
+            user_info,
+            "MXMetricManagerSubscriber delivery",
+            |state| {
+                let Ok(event) =
+                    serde_json::from_slice::<MetricManagerEvent>(payload_json.to_bytes())
+                else {
+                    return;
+                };
 
-        let mut delegate = match state.delegate.lock() {
-            Ok(guard) => guard,
-            Err(poisoned) => poisoned.into_inner(),
-        };
-
-        match event.event.as_str() {
-            "didReceiveMetricPayloads" => {
-                delegate.did_receive_metric_payloads(event.metric_payloads);
-            }
-            "didReceiveDiagnosticPayloads" => {
-                delegate.did_receive_diagnostic_payloads(event.diagnostic_payloads);
-            }
-            _ => {}
-        }
-    }));
+                let mut delegate = state.lock().unwrap_or_else(PoisonError::into_inner);
+                match event.event.as_str() {
+                    "didReceiveMetricPayloads" => {
+                        delegate.did_receive_metric_payloads(event.metric_payloads);
+                    }
+                    "didReceiveDiagnosticPayloads" => {
+                        delegate.did_receive_diagnostic_payloads(event.diagnostic_payloads);
+                    }
+                    _ => {}
+                }
+            },
+        );
+    }
 }
 
 impl MetricManager {
@@ -232,23 +231,22 @@ impl MetricManager {
     where
         D: MetricSubscriberDelegate + 'static,
     {
-        let callback_state = Box::new(CallbackState {
-            delegate: Mutex::new(Box::new(delegate)),
-        });
-        let user_info = std::ptr::from_ref(callback_state.as_ref())
-            .cast_mut()
-            .cast::<c_void>();
+        let delegate: Box<dyn MetricSubscriberDelegate> = Box::new(delegate);
+        let context = CallbackContext::new(Mutex::new(delegate));
+        let user_info = context.retained_ptr();
         let mut raw = ptr::null_mut();
         let mut error_ptr = ptr::null_mut();
         let status = unsafe {
             ffi::manager::mx_metric_manager_add_subscriber(
                 Some(metric_event_trampoline),
                 user_info,
-                &mut raw,
-                &mut error_ptr,
+                Some(CallbackContext::<SubscriberState>::RELEASE),
+                &raw mut raw,
+                &raw mut error_ptr,
             )
         };
         if status != ffi::status::OK {
+            unsafe { (CallbackContext::<SubscriberState>::RELEASE)(user_info) };
             return Err(from_swift(status, error_ptr));
         }
         if raw.is_null() {
@@ -257,10 +255,7 @@ impl MetricManager {
             ));
         }
 
-        Ok(MetricSubscription {
-            raw,
-            _callback_state: callback_state,
-        })
+        Ok(MetricSubscription { raw, context })
     }
 
     fn invoke_launch_measurement(
@@ -298,6 +293,7 @@ impl MetricSubscription {
 
 impl Drop for MetricSubscription {
     fn drop(&mut self) {
+        self.context.deactivate();
         if self.raw.is_null() {
             return;
         }
@@ -307,5 +303,77 @@ impl Drop for MetricSubscription {
             ffi::mx_object_release(self.raw);
         }
         self.raw = ptr::null_mut();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::{Arc, Mutex};
+
+    use doom_fish_utils::callback_context::CallbackContext;
+
+    use super::{metric_event_trampoline, MetricSubscriberDelegate, SubscriberState};
+    use crate::metric_payload::MetricPayload;
+
+    struct Probe {
+        deliveries: Arc<AtomicUsize>,
+        drops: Arc<AtomicUsize>,
+    }
+
+    impl MetricSubscriberDelegate for Probe {
+        fn did_receive_metric_payloads(&mut self, payloads: Vec<MetricPayload>) {
+            assert!(payloads.is_empty());
+            self.deliveries.fetch_add(1, Ordering::SeqCst);
+        }
+    }
+
+    impl Drop for Probe {
+        fn drop(&mut self) {
+            self.drops.fetch_add(1, Ordering::SeqCst);
+        }
+    }
+
+    #[test]
+    fn late_delivery_after_the_rust_handle_is_gone_is_ignored_and_safe() {
+        let deliveries = Arc::new(AtomicUsize::new(0));
+        let drops = Arc::new(AtomicUsize::new(0));
+        let delegate: Box<dyn MetricSubscriberDelegate> = Box::new(Probe {
+            deliveries: Arc::clone(&deliveries),
+            drops: Arc::clone(&drops),
+        });
+        let context: CallbackContext<SubscriberState> = CallbackContext::new(Mutex::new(delegate));
+        let foreign = context.retained_ptr();
+        let event = c"{\"event\":\"didReceiveMetricPayloads\",\"metricPayloads\":[]}";
+
+        unsafe { metric_event_trampoline(foreign, event.as_ptr()) };
+        assert_eq!(deliveries.load(Ordering::SeqCst), 1);
+
+        drop(context);
+        unsafe { metric_event_trampoline(foreign, event.as_ptr()) };
+        assert_eq!(deliveries.load(Ordering::SeqCst), 1);
+        assert_eq!(drops.load(Ordering::SeqCst), 0);
+
+        unsafe { (CallbackContext::<SubscriberState>::RELEASE)(foreign) };
+        assert_eq!(drops.load(Ordering::SeqCst), 1);
+    }
+
+    #[test]
+    fn malformed_delivery_is_ignored() {
+        let deliveries = Arc::new(AtomicUsize::new(0));
+        let drops = Arc::new(AtomicUsize::new(0));
+        let delegate: Box<dyn MetricSubscriberDelegate> = Box::new(Probe {
+            deliveries: Arc::clone(&deliveries),
+            drops: Arc::clone(&drops),
+        });
+        let context: CallbackContext<SubscriberState> = CallbackContext::new(Mutex::new(delegate));
+
+        unsafe { metric_event_trampoline(context.as_ptr(), c"[]".as_ptr()) };
+        unsafe { metric_event_trampoline(context.as_ptr(), core::ptr::null()) };
+        unsafe { metric_event_trampoline(core::ptr::null_mut(), c"{}".as_ptr()) };
+        assert_eq!(deliveries.load(Ordering::SeqCst), 0);
+
+        drop(context);
+        assert_eq!(drops.load(Ordering::SeqCst), 1);
     }
 }
