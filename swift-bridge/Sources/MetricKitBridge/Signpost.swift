@@ -94,9 +94,11 @@ private func mxSignpostCall(
         return MX_INVALID_ARGUMENT
     }
 
-    let nameString = String(cString: name)
-    guard !nameString.isEmpty else {
-        mxWriteError(errorOut, "MetricKit signpost name cannot be empty")
+    guard mx_metrickit_signpost_name_is_literal(name) else {
+        mxWriteError(
+            errorOut,
+            "MetricKit signpost names must be non-empty string literals compiled into this binary"
+        )
         return MX_INVALID_ARGUMENT
     }
     guard signpostID != 0 else {

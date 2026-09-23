@@ -1,9 +1,12 @@
 #include "mx_signpost_bridge.h"
 
 #include <MetricKit/MXSignpost_Private.h>
+#include <mach-o/getsect.h>
+#include <mach-o/loader.h>
 #include <os/signpost.h>
 #include <os/trace_base.h>
 #include <stdbool.h>
+#include <string.h>
 
 static void mx_metrickit_emit_with_name_impl(
     void *dso,
@@ -25,6 +28,28 @@ static bool mx_metrickit_should_emit(os_log_t log, os_signpost_id_t signpost_id,
         && signpost_id != OS_SIGNPOST_ID_NULL
         && signpost_id != OS_SIGNPOST_ID_INVALID
         && os_signpost_enabled(log);
+}
+
+bool mx_metrickit_signpost_name_is_literal(const char *name) {
+    if (name == NULL || name[0] == '\0') {
+        return false;
+    }
+
+    unsigned long size = 0;
+    const uint8_t *text = getsegmentdata((const struct mach_header_64 *)&__dso_handle, "__TEXT", &size);
+    if (text == NULL || size == 0) {
+        return false;
+    }
+
+    uintptr_t start = (uintptr_t)text;
+    uintptr_t end = start + size;
+    uintptr_t address = (uintptr_t)name;
+    if (address < start || address >= end) {
+        return false;
+    }
+
+    size_t available = (size_t)(end - address);
+    return strnlen(name, available) < available;
 }
 
 uint64_t mx_metrickit_signpost_make_id(os_log_t log) {

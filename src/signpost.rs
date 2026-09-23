@@ -1,4 +1,4 @@
-use core::ffi::{c_char, c_void};
+use core::ffi::{c_char, c_void, CStr};
 use core::ptr;
 
 use serde::{Deserialize, Serialize};
@@ -8,7 +8,7 @@ use crate::average::{Average, Measurement};
 use crate::error::{from_swift, MetricKitError};
 use crate::ffi;
 use crate::histogram::Histogram;
-use crate::private::{to_cstring, to_json_string, to_json_value};
+use crate::private::{to_json_string, to_json_value};
 
 /// Rust wrapper for a signpost identifier used by `MetricKit` signpost APIs.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -75,37 +75,29 @@ impl MetricLogHandle {
     pub fn emit_event(
         &self,
         signpost_id: SignpostId,
-        name: impl AsRef<str>,
+        name: &'static CStr,
     ) -> Result<(), MetricKitError> {
-        self.emit_named(
-            signpost_id,
-            name.as_ref(),
-            ffi::signpost::mx_signpost_event_emit,
-        )
+        self.emit_named(signpost_id, name, ffi::signpost::mx_signpost_event_emit)
     }
 
     /// Begins a `MetricKit` signpost interval.
     pub fn interval_begin(
         &self,
         signpost_id: SignpostId,
-        name: impl AsRef<str>,
+        name: &'static CStr,
     ) -> Result<(), MetricKitError> {
-        self.emit_named(
-            signpost_id,
-            name.as_ref(),
-            ffi::signpost::mx_signpost_interval_begin,
-        )
+        self.emit_named(signpost_id, name, ffi::signpost::mx_signpost_interval_begin)
     }
 
     /// Begins an animation interval correlated with `MXAnimationMetric` data.
     pub fn animation_interval_begin(
         &self,
         signpost_id: SignpostId,
-        name: impl AsRef<str>,
+        name: &'static CStr,
     ) -> Result<(), MetricKitError> {
         self.emit_named(
             signpost_id,
-            name.as_ref(),
+            name,
             ffi::signpost::mx_signpost_animation_interval_begin,
         )
     }
@@ -114,19 +106,15 @@ impl MetricLogHandle {
     pub fn interval_end(
         &self,
         signpost_id: SignpostId,
-        name: impl AsRef<str>,
+        name: &'static CStr,
     ) -> Result<(), MetricKitError> {
-        self.emit_named(
-            signpost_id,
-            name.as_ref(),
-            ffi::signpost::mx_signpost_interval_end,
-        )
+        self.emit_named(signpost_id, name, ffi::signpost::mx_signpost_interval_end)
     }
 
     fn emit_named(
         &self,
         signpost_id: SignpostId,
-        name: &str,
+        name: &'static CStr,
         callback: unsafe extern "C" fn(*mut c_void, u64, *const c_char, *mut *mut c_char) -> i32,
     ) -> Result<(), MetricKitError> {
         if self.raw.is_null() {
@@ -134,8 +122,12 @@ impl MetricLogHandle {
                 "MetricKit log handle has already been released".into(),
             ));
         }
+        if name.is_empty() {
+            return Err(MetricKitError::InvalidArgument(
+                "signpost name cannot be empty".into(),
+            ));
+        }
 
-        let name = to_cstring("signpost name", name)?;
         let mut error_ptr = ptr::null_mut();
         let status =
             unsafe { callback(self.raw, signpost_id.raw(), name.as_ptr(), &mut error_ptr) };

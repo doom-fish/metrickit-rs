@@ -13,7 +13,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let manager = MetricManager::shared_manager();
     let log_handle = manager.make_log_handle("example.startup")?;
     let signpost_id = log_handle.make_signpost_id()?;
-    log_handle.emit_event(signpost_id, "startup")?;
+    log_handle.emit_event(signpost_id, c"startup")?;
 
     let subscription = manager.subscribe(
         MetricSubscriberCallbacks::new().on_metric_payloads(|payloads| {
