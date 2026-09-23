@@ -45,7 +45,7 @@ func mxJSONSafe(_ value: Any) -> Any {
     case let data as Data:
         return data.base64EncodedString()
     case let number as NSNumber:
-        return number
+        return number.doubleValue.isFinite ? number : NSNull()
     case let string as String:
         return string
     case _ as NSNull:
@@ -58,6 +58,9 @@ func mxJSONSafe(_ value: Any) -> Any {
 func mxJSONString(_ value: Any) -> String {
     do {
         let safe = mxJSONSafe(value)
+        guard JSONSerialization.isValidJSONObject(safe) else {
+            return "[]"
+        }
         let data = try JSONSerialization.data(withJSONObject: safe, options: [.sortedKeys])
         return String(data: data, encoding: .utf8) ?? "[]"
     } catch {

@@ -21,3 +21,15 @@ fn diagnostic_payload_round_trips_to_json_and_dictionary() -> Result<(), Box<dyn
     );
     Ok(())
 }
+
+#[test]
+fn diagnostic_payload_with_null_timestamps_still_decodes() -> Result<(), Box<dyn std::error::Error>>
+{
+    let mut dictionary = common::sample_diagnostic_payload().dictionary_representation()?;
+    dictionary["timeStampBegin"] = serde_json::Value::Null;
+
+    let payload: metrickit::DiagnosticPayload = serde_json::from_value(dictionary)?;
+    assert!(payload.time_stamp_begin.is_nan());
+    assert!(payload.time_stamp_end.is_finite());
+    Ok(())
+}

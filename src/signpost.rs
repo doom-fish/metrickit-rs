@@ -191,6 +191,7 @@ pub struct SignpostRecord {
     /// Mirrors `MXSignpost.name`.
     pub name: String,
     /// Mirrors `MXSignpost.beginTimeStamp`.
+    #[serde(deserialize_with = "crate::private::f64_or_nan")]
     pub begin_time_stamp: f64,
     /// Mirrors `MXSignpost.endTimeStamp` when `MetricKit` provides it.
     pub end_time_stamp: Option<f64>,

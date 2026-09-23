@@ -1,7 +1,7 @@
 use std::ffi::CString;
 
 use serde::de::DeserializeOwned;
-use serde::Serialize;
+use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::Value;
 
 use crate::error::MetricKitError;
@@ -41,4 +41,8 @@ pub fn to_cstring(argument_name: &str, value: &str) -> Result<CString, MetricKit
             "{argument_name} cannot contain interior NUL bytes"
         ))
     })
+}
+
+pub fn f64_or_nan<'de, D: Deserializer<'de>>(deserializer: D) -> Result<f64, D::Error> {
+    Ok(Option::<f64>::deserialize(deserializer)?.unwrap_or(f64::NAN))
 }

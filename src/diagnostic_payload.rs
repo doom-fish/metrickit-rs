@@ -13,8 +13,10 @@ use crate::private::{to_json_string, to_json_value};
 #[serde(rename_all = "camelCase")]
 pub struct DiagnosticPayload {
     /// Mirrors `MXDiagnosticPayload.timeStampBegin`.
+    #[serde(deserialize_with = "crate::private::f64_or_nan")]
     pub time_stamp_begin: f64,
     /// Mirrors `MXDiagnosticPayload.timeStampEnd`.
+    #[serde(deserialize_with = "crate::private::f64_or_nan")]
     pub time_stamp_end: f64,
     /// Mirrors `MXDiagnosticPayload.crashDiagnostics`.
     #[serde(default)]

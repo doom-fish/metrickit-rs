@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 pub struct Measurement {
     /// Stores the numeric component emitted by `MetricKit`.
+    #[serde(deserialize_with = "crate::private::f64_or_nan")]
     pub value: f64,
     /// Stores the unit symbol emitted by `MetricKit`.
     pub unit_symbol: String,
@@ -39,6 +40,7 @@ pub struct Average {
     /// Mirrors `MXAverage.sampleCount`.
     pub sample_count: i64,
     /// Mirrors `MXAverage.standardDeviation`.
+    #[serde(deserialize_with = "crate::private::f64_or_nan")]
     pub standard_deviation: f64,
 }
 

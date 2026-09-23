@@ -54,3 +54,13 @@ fn signpost_names_must_be_literals_in_this_binary() -> Result<(), Box<dyn std::e
     log_handle.interval_end(signpost_id, c"unit-animation")?;
     Ok(())
 }
+
+#[test]
+fn signpost_record_with_null_begin_time_decodes_as_nan() -> Result<(), Box<dyn std::error::Error>> {
+    let record: metrickit::SignpostRecord = serde_json::from_str(
+        r#"{"subsystem":"s","category":"c","name":"n","beginTimeStamp":null,"endTimeStamp":null,"duration":null,"isInterval":false}"#,
+    )?;
+    assert!(record.begin_time_stamp.is_nan());
+    assert_eq!(record.end_time_stamp, None);
+    Ok(())
+}

@@ -21,8 +21,10 @@ pub struct MetricPayload {
     /// Mirrors `MXMetricPayload.includesMultipleApplicationVersions`.
     pub includes_multiple_application_versions: bool,
     /// Mirrors `MXMetricPayload.timeStampBegin`.
+    #[serde(deserialize_with = "crate::private::f64_or_nan")]
     pub time_stamp_begin: f64,
     /// Mirrors `MXMetricPayload.timeStampEnd`.
+    #[serde(deserialize_with = "crate::private::f64_or_nan")]
     pub time_stamp_end: f64,
     /// Mirrors `MXMetricPayload.cpuMetrics` when `MetricKit` provides it.
     pub cpu_metrics: Option<CpuMetric>,
