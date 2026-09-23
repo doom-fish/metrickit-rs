@@ -185,8 +185,8 @@ impl MetricManager {
         let status = unsafe {
             ffi::signpost::mx_metric_manager_make_log_handle(
                 category.as_ptr(),
-                &mut raw,
-                &mut error_ptr,
+                &raw mut raw,
+                &raw mut error_ptr,
             )
         };
         if status != ffi::status::OK {
@@ -264,7 +264,7 @@ impl MetricManager {
     ) -> Result<(), MetricKitError> {
         let task_id = to_cstring("task_id", task_id)?;
         let mut error_ptr = ptr::null_mut();
-        let status = unsafe { callback(task_id.as_ptr(), &mut error_ptr) };
+        let status = unsafe { callback(task_id.as_ptr(), &raw mut error_ptr) };
         if status != ffi::status::OK {
             return Err(from_swift(status, error_ptr));
         }

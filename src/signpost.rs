@@ -129,8 +129,14 @@ impl MetricLogHandle {
         }
 
         let mut error_ptr = ptr::null_mut();
-        let status =
-            unsafe { callback(self.raw, signpost_id.raw(), name.as_ptr(), &mut error_ptr) };
+        let status = unsafe {
+            callback(
+                self.raw,
+                signpost_id.raw(),
+                name.as_ptr(),
+                &raw mut error_ptr,
+            )
+        };
         if status != ffi::status::OK {
             return Err(from_swift(status, error_ptr));
         }
