@@ -1,3 +1,0 @@
-#ifndef METRICKIT_BRIDGE_H
-#define METRICKIT_BRIDGE_H
-#endif

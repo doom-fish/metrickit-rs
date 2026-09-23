@@ -22,8 +22,7 @@ let package = Package(
         .target(
             name: "MetricKitBridge",
             dependencies: ["MetricKitSignpostC"],
-            path: "Sources/MetricKitBridge",
-            publicHeadersPath: "include"
+            path: "Sources/MetricKitBridge"
         )
     ]
 )

@@ -1,4 +1,0 @@
-module MetricKitBridge {
-    header "MetricKitBridge.h"
-    export *
-}
