@@ -1,5 +1,36 @@
 # Changelog
 
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.3.0] - Unreleased
+
+### Fixed
+
+- Subscriber state lives in a retained callback context that the Swift subscriber releases in `deinit`. Previously `MetricSubscription`'s drop freed the state right after `removeSubscriber:`, while `MetricKit` still held, and could still deliver to, the subscriber.
+- Extended launch measurement no longer hops to the main thread with `DispatchQueue.main.sync`, which deadlocked hosts whose main thread does not service the main queue. Off the main thread the calls return `MetricKitError::MainThreadRequired`.
+- NaN and infinite numbers no longer raise an uncatchable Objective-C exception while the bridge encodes JSON: they are bridged as `null`, and the non-optional `f64` fields decode `null` as NaN.
+- `mx_signpost_bridge.m` no longer contains a raw NUL byte, which made git treat it as binary.
+- `COVERAGE.md` and the coverage audits no longer describe the crate's serde JSON as Apple's `JSONRepresentation`; those rows are partial.
+
+### Changed
+
+- **Breaking:** `MetricLogHandle::emit_event`, `interval_begin`, `animation_interval_begin`, and `interval_end` take `name: &'static CStr`. Names outside the binary's `__TEXT` segment, such as leaked heap strings, and empty names return `MetricKitError::InvalidArgument`.
+- **Breaking:** `MetricPayload` and `DiagnosticPayload` have a new public field, `apple_json_representation`.
+- Depends on `doom-fish-utils` 0.4.1 for the subscriber callback context.
+- `rust-version` is now 1.82.
+
+### Added
+
+- `MetricPayload::apple_json_representation` and `DiagnosticPayload::apple_json_representation`, Apple's `jsonRepresentation()` output for payloads delivered by `MetricKit`.
+- `MetricKitError::MainThreadRequired`.
+
+### Removed
+
+- The empty `MetricKitBridge.h` placeholder header and its module map.
+
 ## [0.2.2] - 2026-05-20
 
 - Clippy hygiene sweep: cleared all `-D warnings` lints across the crate. No public API change.

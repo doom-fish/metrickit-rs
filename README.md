@@ -2,7 +2,16 @@
 
 Safe Rust bindings for Apple's [MetricKit](https://developer.apple.com/documentation/metrickit) framework on macOS.
 
-> **Status:** v0.2.0 covers the macOS MetricKit surface exposed by `MetricKit.framework`, including `MXMetricManager`, typed `MXMetricPayload` / `MXDiagnosticPayload` models, `MXCallStackTree`, MetricKit signpost emission, statistical helpers, metadata, signpost metrics / records, and crash / hang / CPU / disk-write diagnostics. iOS-only APIs are documented in [`COVERAGE.md`](COVERAGE.md).
+> **Status:** v0.3 covers the macOS MetricKit surface exposed by `MetricKit.framework`, including `MXMetricManager`, typed `MXMetricPayload` / `MXDiagnosticPayload` models, `MXCallStackTree`, MetricKit signpost emission, statistical helpers, metadata, signpost metrics / records, and crash / hang / CPU / disk-write diagnostics. iOS-only APIs are documented in [`COVERAGE.md`](COVERAGE.md).
+
+## Installation
+
+```toml
+[dependencies]
+metrickit-rs = "0.3"
+```
+
+The library is imported as `metrickit`.
 
 ## Quick start
 
