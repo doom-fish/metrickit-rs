@@ -102,10 +102,6 @@ fn link_swift_bridge(swift_build_dir: &str) {
     }
 
     if let Some(xcode_path) = xcode_select_path() {
-        let swift_lib_path_old =
-            format!("{xcode_path}/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.5/macosx");
-        println!("cargo:rustc-link-arg=-Wl,-rpath,{swift_lib_path_old}");
-
         let swift_lib_path =
             format!("{xcode_path}/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx");
         println!("cargo:rustc-link-search=native={swift_lib_path}");

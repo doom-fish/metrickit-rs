@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - NaN and infinite numbers no longer raise an uncatchable Objective-C exception while the bridge encodes JSON: they are bridged as `null`, and the non-optional `f64` fields decode `null` as NaN.
 - `mx_signpost_bridge.m` no longer contains a raw NUL byte, which made git treat it as binary.
 - `COVERAGE.md` and the coverage audits no longer describe the crate's serde JSON as Apple's `JSONRepresentation`; those rows are partial.
+- `build.rs` no longer adds the toolchain's Swift 5.5 back-deployment directory (`usr/lib/swift-5.5/macosx`) to the rpath of the crate's tests and examples. The rpath pointed into Xcode, so it never made back-deployment work on other machines; `libswift_Concurrency` resolves through `/usr/lib/swift`.
 
 ### Changed
 
