@@ -323,7 +323,7 @@ mod tests {
 
     impl MetricSubscriberDelegate for Probe {
         fn did_receive_metric_payloads(&mut self, payloads: Vec<MetricPayload>) {
-            assert!(payloads.is_empty());
+            assert_eq!(payloads.len(), 0);
             self.deliveries.fetch_add(1, Ordering::SeqCst);
         }
     }
